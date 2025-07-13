@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>1-Month Challenge Tracker</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Loading screen styles */
+    #loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to right, #ff9a9e, #fad0c4);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      font-size: 28px;
+      color: #fff;
+      font-weight: bold;
+      transition: opacity 0.5s ease;
+    }
+
+    #loader.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* App Styles */
+    .app {
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      margin-top: 30px;
+    }
+
+    body {
+      background: linear-gradient(to right, #f6d365, #fda085);
+      padding: 20px;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      color: #444;
+    }
+
+    .task {
+      display: flex;
+      align-items: center;
+      margin: 10px 0;
+    }
+
+    input[type="checkbox"] {
+      margin-right: 10px;
+      transform: scale(1.2);
+    }
+
+    .week {
+      margin-top: 20px;
+      background: #f0f8ff;
+      padding: 15px;
+      border-radius: 10px;
+    }
+
+    .week h3 {
+      margin-top: 0;
+    }
+
+    .progress-bar {
+      height: 25px;
+      background: #eee;
+      border-radius: 10px;
+      margin-top: 20px;
+      overflow: hidden;
+    }
+
+    .progress {
+      height: 100%;
+      background: #00b894;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    button {
+      background: #6c5ce7;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin-top: 15px;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading Screen -->
+  <div id="loader">🚀 Loading your challenge...</div>
+
+  <!-- Main App -->
+  <div class="app" style="display: none;">
+    <h1>🚀 1-Month Challenge Tracker</h1>
+    <p>Track your progress and win the month!</p>
+    <div id="weeks"></div>
+
+    <div class="progress-bar">
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <button onclick="resetProgress()">🔄 Reset</button>
+  </div>
+
+  <script>
+    // Show loader then app
+    window.addEventListener("load", () => {
+      setTimeout(() => {
+        document.getElementById("loader").classList.add("fade-out");
+        document.querySelector(".app").style.display = "block";
+      }, 2500);
+    });
+
+    // Challenge Tasks
+    const tasksByWeek = [
+      {
+        title: "Week 1 – Setup",
+        tasks: [
+          "Polish & combine all apps",
+          "Add loading & navigation",
+          "Host on GitHub Pages",
+          "Start Heart Disease ML project"
+        ]
+      },
+      {
+        title: "Week 2 – ML + Fiverr",
+        tasks: [
+          "Finish ML project",
+          "Upload to GitHub",
+          "Create Fiverr account",
+          "Post 2 gigs"
+        ]
+      },
+      {
+        title: "Week 3 – Show & Share",
+        tasks: [
+          "Share on LinkedIn/Discord",
+          "Write LinkedIn post",
+          "Do free task for review",
+          "Record intro video"
+        ]
+      },
+      {
+        title: "Week 4 – Earn & Reflect",
+        tasks: [
+          "Apply on Fiverr/Internshala",
+          "Get 1 paid task",
+          "Start next ML project",
+          "Plan next month"
+        ]
+      }
+    ];
+
+    const quotes = [
+      "🌟 Believe in yourself and all that you are.",
+      "🚀 Progress over perfection!",
+      "🎯 You’re one task closer to success!",
+      "🔥 Stay focused. Stay sharp. Get it done.",
+      "🏁 Winning starts with beginning."
+    ];
+
+    const completeSound = new Audio("https://www.soundjay.com/buttons/sounds/button-3.mp3");
+
+    const weeksContainer = document.getElementById("weeks");
+    const progressBar = document.getElementById("progress");
+
+    function showQuote() {
+      const quote = quotes[Math.floor(Math.random() * quotes.length)];
+      const quoteDiv = document.createElement("div");
+      quoteDiv.textContent = quote;
+      quoteDiv.style.fontWeight = "bold";
+      quoteDiv.style.textAlign = "center";
+      quoteDiv.style.margin = "10px 0 20px";
+      quoteDiv.style.fontSize = "18px";
+      document.querySelector(".app").insertBefore(quoteDiv, weeksContainer);
+    }
+
+    function showDailyReminder() {
+      const today = new Date().toDateString();
+      const lastSeen = localStorage.getItem("lastPopup");
+
+      if (lastSeen !== today) {
+        alert("👋 Welcome back! Ready to conquer today?");
+        localStorage.setItem("lastPopup", today);
+      }
+    }
+
+    function loadTasks() {
+      weeksContainer.innerHTML = "";
+
+      let total = 0;
+      let completed = 0;
+
+      tasksByWeek.forEach((week, wIndex) => {
+        const weekDiv = document.createElement("div");
+        weekDiv.className = "week";
+        weekDiv.innerHTML = `<h3>${week.title}</h3>`;
+
+        week.tasks.forEach((task, tIndex) => {
+          const taskId = `week${wIndex}-task${tIndex}`;
+          const checked = localStorage.getItem(taskId) === "true";
+          if (checked) completed++;
+          total++;
+
+          const taskDiv = document.createElement("div");
+          taskDiv.className = "task";
+          taskDiv.innerHTML = `
+            <input type="checkbox" id="${taskId}" ${checked ? "checked" : ""}>
+            <label for="${taskId}">${task}</label>
+          `;
+          weekDiv.appendChild(taskDiv);
+
+          document.addEventListener("change", (e) => {
+            if (e.target.id === taskId) {
+              localStorage.setItem(taskId, e.target.checked);
+              if (e.target.checked) completeSound.play();
+              loadTasks();
+            }
+          });
+        });
+
+        weeksContainer.appendChild(weekDiv);
+      });
+
+      const percent = Math.round((completed / total) * 100);
+      progressBar.style.width = percent + "%";
+
+      if (percent === 100) {
+        alert("🎉 You’ve completed your 1-Month Challenge! Great job, Sonixa!");
+      }
+    }
+
+    function resetProgress() {
+      if (confirm("Do you want to reset your progress?")) {
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith("week") || key === "lastPopup") {
+            localStorage.removeItem(key);
+          }
+        });
+        loadTasks();
+      }
+    }
+
+    window.onload = () => {
+      showDailyReminder();
+      showQuote();
+      loadTasks();
+    };
+  </script>
+</body>
+</html>
